@@ -3,12 +3,7 @@ import "./App.css";
 
 function App() {
   const [tableData, setTableData] = useState([]);
-  const [currentPageData, setCurrentPageData] = useState([]);
   const [formData, setFormData] = useState({ name: "", gender: "", age: "" });
-  const [tableNumber, setTableNumber] = useState(1);
-
-  const rowsPerTable = 5;
-  const totalPages = Math.ceil(tableData.length / rowsPerTable);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,23 +13,17 @@ function App() {
     }));
   };
 
-  const paginate = (pageNumber) => {
-    const indexofLastObj = rowsPerTable * pageNumber;
-    const indexofFirstObj = indexofLastObj - rowsPerTable;
-    const dataSlice = tableData.slice(indexofFirstObj, indexofLastObj);
-    setCurrentPageData(dataSlice);
-  };
+
 
   const addDataToTable = (e) => {
     e.preventDefault();
     setTableData((prev) => [...prev, formData]);
     setFormData({ name: "", gender: "", age: "" });
-    // tableData.length > 4 ? paginate() : ""
   };
 
   useEffect(() => {
-    paginate(tableNumber);
-  }, [tableData, tableNumber]);
+     console.log(tableData); 
+  }, [tableData]);
 
   return (
     <>
@@ -88,7 +77,7 @@ function App() {
         </thead>
         {/* second row  */}
         <tbody>
-          {currentPageData.map((data, index) => (
+          {tableData.map((data, index) => (
             <tr key={index}>
               <td className="border px-6 py-1">{data.name}</td>
               <td className="border px-6">{data.gender}</td>
@@ -106,15 +95,9 @@ function App() {
         </tbody>
       </table>
 
-      <div className=" mt-3">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button className="bg-green-500 text-white px-4 py-1 rounded-md  ml-10 mt-3 cursor-pointer"
-                  key={index}
-                  onClick={() => setTableNumber(index + 1)}>
-            {index + 1}
-          </button>
-        ))}
-      </div>
+      <button className="bg-green-500 text-white px-4 py-1 rounded-md block ml-50 mt-3 cursor-pointer">
+        1
+      </button>
     </>
   );
 }
