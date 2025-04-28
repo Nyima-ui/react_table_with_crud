@@ -1,48 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./App.css";
 
 function App() {
   const [tableData, setTableData] = useState([]);
-  const [currentPageData, setCurrentPageData] = useState([]);
   const [formData, setFormData] = useState({ name: "", gender: "", age: "" });
-  const [tableNumber, setTableNumber] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const rowsPerTable = 5;
-  const totalPages = Math.ceil(tableData.length / rowsPerTable);
+  const ROWS_PER_TABLE = 5;
+  const totalPages = Math.ceil(tableData.length / ROWS_PER_TABLE);
+
+  const currentPageData = tableData.slice(
+    (currentPage - 1) * ROWS_PER_TABLE,
+    currentPage * ROWS_PER_TABLE
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const paginate = (pageNumber) => {
-    const indexofLastObj = rowsPerTable * pageNumber;
-    const indexofFirstObj = indexofLastObj - rowsPerTable;
-    const dataSlice = tableData.slice(indexofFirstObj, indexofLastObj);
-    setCurrentPageData(dataSlice);
-  };
-
-  const addDataToTable = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.name || !formData.gender || !formData.age) return;
     setTableData((prev) => [...prev, formData]);
     setFormData({ name: "", gender: "", age: "" });
-    // tableData.length > 4 ? paginate() : ""
+    setCurrentPage(Math.ceil((tableData.length + 1) / ROWS_PER_TABLE));
   };
-
-  useEffect(() => {
-    paginate(tableNumber);
-  }, [tableData, tableNumber]);
 
   return (
     <>
-      <form onSubmit={addDataToTable}>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="Name"
-          className="border m-5"
+          className="border m-5 bg-white"
           onChange={handleChange}
           name="name"
           value={formData.name}
@@ -51,7 +42,7 @@ function App() {
         <input
           type="text"
           placeholder="Gender"
-          className="border m-5"
+          className="border m-5 bg-white"
           onChange={handleChange}
           name="gender"
           value={formData.gender}
@@ -60,7 +51,7 @@ function App() {
         <input
           type="number"
           placeholder="Age"
-          className="border m-5"
+          className="border m-5 bg-white"
           onChange={handleChange}
           name="age"
           value={formData.age}
@@ -74,9 +65,9 @@ function App() {
         </button>
       </form>
 
-      <input type="text" placeholder="Search" className="border m-5" />
+      <input type="text" placeholder="Search" className="border m-5 bg-white" />
 
-      <table className="border mx-5 mt-2">
+      <table className="border mx-5 mt-2 bg-white">
         {/* heading row  */}
         <thead>
           <tr className="border">
@@ -106,14 +97,20 @@ function App() {
         </tbody>
       </table>
 
-      <div className=" mt-3">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button className="bg-green-500 text-white px-4 py-1 rounded-md  ml-10 mt-3 cursor-pointer"
-                  key={index}
-                  onClick={() => setTableNumber(index + 1)}>
-            {index + 1}
-          </button>
-        ))}
+      <div className="pl-30 mt-3">
+        {Array.from({ length: totalPages }, (_, index) => {
+          const isActive = currentPage === index + 1;
+          return (
+            <button
+              className={`px-4 py-1 rounded-md mt-3 cursor-pointer mx-3
+              ${isActive ? "bg-green-500 text-white" : "bg-white text-black"}`}
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+            >
+              {index + 1}
+            </button>
+          );
+        })}
       </div>
     </>
   );
