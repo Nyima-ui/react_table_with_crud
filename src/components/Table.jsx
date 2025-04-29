@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const Table = ({
   totalPages,
@@ -8,16 +8,28 @@ const Table = ({
   tableData,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredData = tableData.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase() || 
-    item.gender.toLowerCase().includes(searchTerm.toLowerCase() || 
-    item.age.includes(searchTerm)))
-  );
+  const filteredData = useMemo(() => {
+    const search = debouncedSearchTerm.toLowerCase();
+    const regex = new RegExp(`\\b${search}`, "i"); 
+    return tableData.filter((item) => {
+      return Object.values(item).some((val) => regex.test(val.toString()));
+    });
+  }, [tableData, debouncedSearchTerm]);
 
   const dataToDisplay = searchTerm ? filteredData : currentPageData;
 
@@ -63,21 +75,23 @@ const Table = ({
         </tbody>
       </table>
 
-      <div className="pl-30 mt-3">
-        {Array.from({ length: totalPages }, (_, index) => {
-          const isActive = currentPage === index + 1;
-          return (
-            <button
-              className={`px-4 py-1 rounded-md mt-3 cursor-pointer mx-3
+      {!searchTerm && (
+        <div className="pl-30 mt-3">
+          {Array.from({ length: totalPages }, (_, index) => {
+            const isActive = currentPage === index + 1;
+            return (
+              <button
+                className={`px-4 py-1 rounded-md mt-3 cursor-pointer mx-3
               ${isActive ? "bg-green-500 text-white" : "bg-white text-black"}`}
-              key={index}
-              onClick={() => setCurrentPage(index + 1)}
-            >
-              {index + 1}
-            </button>
-          );
-        })}
-      </div>
+                key={index}
+                onClick={() => setCurrentPage(index + 1)}
+              >
+                {index + 1}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 };
