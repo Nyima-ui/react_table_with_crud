@@ -3,3 +3,8 @@
 body{
     background-color: rgb(60, 60, 60);
 }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

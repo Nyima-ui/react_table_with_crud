@@ -6,13 +6,14 @@ const Table = ({
   currentPageData,
   setCurrentPage,
   tableData,
-  setTableData
+  setTableData,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null); 
-  const [editedData, setEditedData] = useState({}); 
-  const tableRef = useRef(null); 
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editedData, setEditedData] = useState({});
+  const tableRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -22,11 +23,7 @@ const Table = ({
       clearTimeout(timerId);
     };
   }, [searchTerm]);
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
+  
   const filteredData = useMemo(() => {
     const search = debouncedSearchTerm.toLowerCase();
     const regex = new RegExp(`\\b${search}`, "i");
@@ -36,25 +33,61 @@ const Table = ({
   }, [tableData, debouncedSearchTerm]);
 
   const dataToDisplay = searchTerm ? filteredData : currentPageData;
-   
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        editingIndex !== null &&
+        tableRef.current &&
+        !tableRef.current.contains(event.target)
+      ) {
+        console.log("Edited data:", editedData); 
+        setEditingIndex(null);
+        
+        const actualIndex = tableData.findIndex((item) => {
+          return (
+            item.name === dataToDisplay[editingIndex].name &&
+            item.gender === dataToDisplay[editingIndex].gender && 
+            item.age === dataToDisplay[editingIndex].age
+          ); 
+        })
+        if(actualIndex !== -1){
+          const updatedData = [...tableData]; 
+          updatedData[actualIndex] = editedData; 
+          setTableData(updatedData); 
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [editingIndex, editedData, tableData, setTableData, dataToDisplay]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
 
   const editData = (index) => {
-      setEditingIndex(index); 
-      setEditedData({...dataToDisplay[index]}); 
-  }
+    setEditingIndex(index);
+    setEditedData({ ...dataToDisplay[index] });
+  };
 
   useEffect(() => {
-      console.log(editingIndex); 
-      console.log(editedData); 
-  }, [editingIndex, editedData])
+    if (editingIndex !== null && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingIndex]);
 
   const handleFieldChange = (field, value) => {
-    setEditedData(prev => ({
+    setEditedData((prev) => ({
       ...prev,
-      [field] : value
-    })); 
-  }
-  
+      [field]: value,
+    }));
+  };
+  // useEffect(() => {
+  //    console.log(editedData);
+  // }, [editedData])
   return (
     <>
       <input
@@ -64,7 +97,7 @@ const Table = ({
         value={searchTerm}
         onChange={handleSearchChange}
       />
-      <table className="border mx-5 mt-2 bg-white">
+      <table className="border mx-5 mt-2 bg-white" ref={tableRef}>
         {/* heading row  */}
         <thead>
           <tr className="border">
@@ -77,21 +110,54 @@ const Table = ({
         {/* table rows  */}
         <tbody>
           {dataToDisplay.map((data, index) => (
-            <tr key={index}>
-              <td className="border px-6 py-1">
-                 {editingIndex === index ? (
-                   <input 
-                    className="max-w-[52px] border"
+            <tr
+              key={index}
+              className={editingIndex === index ? "bg-gray-300" : ""}
+            >
+              <td className="border py-1 px-2">
+                {editingIndex === index ? (
+                  <input
+                    className="max-w-[75px] focus:outline-none"
                     type="text"
                     value={editedData.name || ""}
-                    onChange={(e) => handleFieldChange("name", e.target.value)}/>
-                 ) : (data.name)}
+                    ref={inputRef}
+                    onChange={(e) => handleFieldChange("name", e.target.value)}
+                  />
+                ) : (
+                  data.name
+                )}
               </td>
-              <td className="border px-6">{data.gender}</td>
-              <td className="border px-6">{data.age}</td>
               <td className="border px-6">
-                <button className="border bg-red-500 mx-2 text-white px-2 cursor-pointer"
-                        onClick={() => editData(index)}>
+                {editingIndex === index ? (
+                  <input
+                    className="max-w-[50px] focus:outline-none"
+                    type="text"
+                    value={editedData.gender || ""}
+                    onChange={(e) =>
+                      handleFieldChange("gender", e.target.value)
+                    }
+                  />
+                ) : (
+                  data.gender
+                )}
+              </td>
+              <td className="border px-6">
+                {editingIndex === index ? (
+                  <input
+                    className="max-w-[26px] focus:outline-none"
+                    type="number"
+                    value={editedData.age || ""}
+                    onChange={(e) => handleFieldChange("age", e.target.value)}
+                  />
+                ) : (
+                  data.age
+                )}
+              </td>
+              <td className="border px-6">
+                <button
+                  className="border bg-red-500 mx-2 text-white px-2 cursor-pointer"
+                  onClick={() => editData(index)}
+                >
                   Edit
                 </button>
                 <button className="border bg-green-500 mx-2 text-white px-2 cursor-pointer">
