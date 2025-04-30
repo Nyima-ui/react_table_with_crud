@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 
 const Table = ({
   totalPages,
@@ -6,9 +6,13 @@ const Table = ({
   currentPageData,
   setCurrentPage,
   tableData,
+  setTableData
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null); 
+  const [editedData, setEditedData] = useState({}); 
+  const tableRef = useRef(null); 
 
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -25,17 +29,32 @@ const Table = ({
 
   const filteredData = useMemo(() => {
     const search = debouncedSearchTerm.toLowerCase();
-    const regex = new RegExp(`\\b${search}`, "i"); 
+    const regex = new RegExp(`\\b${search}`, "i");
     return tableData.filter((item) => {
       return Object.values(item).some((val) => regex.test(val.toString()));
     });
   }, [tableData, debouncedSearchTerm]);
 
   const dataToDisplay = searchTerm ? filteredData : currentPageData;
+   
+
+  const editData = (index) => {
+      setEditingIndex(index); 
+      setEditedData({...dataToDisplay[index]}); 
+  }
 
   useEffect(() => {
-    console.log(searchTerm);
-  }, [searchTerm]);
+      console.log(editingIndex); 
+      console.log(editedData); 
+  }, [editingIndex, editedData])
+
+  const handleFieldChange = (field, value) => {
+    setEditedData(prev => ({
+      ...prev,
+      [field] : value
+    })); 
+  }
+  
   return (
     <>
       <input
@@ -59,11 +78,20 @@ const Table = ({
         <tbody>
           {dataToDisplay.map((data, index) => (
             <tr key={index}>
-              <td className="border px-6 py-1">{data.name}</td>
+              <td className="border px-6 py-1">
+                 {editingIndex === index ? (
+                   <input 
+                    className="max-w-[52px] border"
+                    type="text"
+                    value={editedData.name || ""}
+                    onChange={(e) => handleFieldChange("name", e.target.value)}/>
+                 ) : (data.name)}
+              </td>
               <td className="border px-6">{data.gender}</td>
               <td className="border px-6">{data.age}</td>
               <td className="border px-6">
-                <button className="border bg-red-500 mx-2 text-white px-2 cursor-pointer">
+                <button className="border bg-red-500 mx-2 text-white px-2 cursor-pointer"
+                        onClick={() => editData(index)}>
                   Edit
                 </button>
                 <button className="border bg-green-500 mx-2 text-white px-2 cursor-pointer">

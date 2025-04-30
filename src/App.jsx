@@ -56,6 +56,7 @@ function App() {
         currentPageData={currentPageData}
         setCurrentPage={setCurrentPage}
         tableData={tableData}
+        setTableData={setTableData}
       />
     </>
   );
