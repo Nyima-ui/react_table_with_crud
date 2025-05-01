@@ -23,7 +23,7 @@ const Table = ({
       clearTimeout(timerId);
     };
   }, [searchTerm]);
-  
+
   const filteredData = useMemo(() => {
     const search = debouncedSearchTerm.toLowerCase();
     const regex = new RegExp(`\\b${search}`, "i");
@@ -33,6 +33,7 @@ const Table = ({
   }, [tableData, debouncedSearchTerm]);
 
   const dataToDisplay = searchTerm ? filteredData : currentPageData;
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -40,20 +41,18 @@ const Table = ({
         tableRef.current &&
         !tableRef.current.contains(event.target)
       ) {
-        console.log("Edited data:", editedData); 
-        setEditingIndex(null);
-        
         const actualIndex = tableData.findIndex((item) => {
           return (
             item.name === dataToDisplay[editingIndex].name &&
-            item.gender === dataToDisplay[editingIndex].gender && 
+            item.gender === dataToDisplay[editingIndex].gender &&
             item.age === dataToDisplay[editingIndex].age
-          ); 
-        })
-        if(actualIndex !== -1){
-          const updatedData = [...tableData]; 
-          updatedData[actualIndex] = editedData; 
-          setTableData(updatedData); 
+          );
+        });
+        setEditingIndex(null);
+        if (actualIndex !== -1) {
+          const updatedData = [...tableData];
+          updatedData[actualIndex] = editedData;
+          setTableData(updatedData);
         }
       }
     };
@@ -67,10 +66,23 @@ const Table = ({
     setSearchTerm(e.target.value);
   };
 
-
   const editData = (index) => {
     setEditingIndex(index);
     setEditedData({ ...dataToDisplay[index] });
+  };
+
+  const deleteRow = (index) => {
+    const dataIndex = tableData.findIndex(
+      (item) => JSON.stringify(item) === JSON.stringify(dataToDisplay[index])
+    );
+    if (dataIndex === -1) return;
+    const newData = tableData.filter((_, i) => i !== dataIndex);
+    const itemsPerPage = 5; // Or pass this as a prop
+    const wasLastItemOnPage = newData.length % itemsPerPage === 0;
+    setTableData(newData);
+    if (wasLastItemOnPage) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
   useEffect(() => {
@@ -85,9 +97,6 @@ const Table = ({
       [field]: value,
     }));
   };
-  // useEffect(() => {
-  //    console.log(editedData);
-  // }, [editedData])
   return (
     <>
       <input
@@ -108,7 +117,7 @@ const Table = ({
           </tr>
         </thead>
         {/* table rows  */}
-        <tbody>
+        <tbody className="max-w-md">
           {dataToDisplay.map((data, index) => (
             <tr
               key={index}
@@ -160,7 +169,10 @@ const Table = ({
                 >
                   Edit
                 </button>
-                <button className="border bg-green-500 mx-2 text-white px-2 cursor-pointer">
+                <button
+                  className="border bg-green-500 mx-2 text-white px-2 cursor-pointer"
+                  onClick={() => deleteRow(index)}
+                >
                   Delete
                 </button>
               </td>
